@@ -25,10 +25,10 @@ class StockPicking(models.Model):
         res = super(StockPicking, self)._create_backorder(backorder_moves)
         for picking in self:
             if picking.picking_type_id.code == 'incoming':
-                backorder = self.search([('backorder_id', '=', picking.id)])
-                backorder.message_post_with_view('mail.message_origin_link',
-                    values={'self': backorder, 'origin': backorder.purchase_id},
-                    subtype_id=self.env.ref('mail.mt_note').id)
+                for backorder in self.search([('backorder_id', '=', picking.id)]):
+                    backorder.message_post_with_view('mail.message_origin_link',
+                        values={'self': backorder, 'origin': backorder.purchase_id},
+                        subtype_id=self.env.ref('mail.mt_note').id)
         return res
 
 
@@ -124,7 +124,7 @@ class StockWarehouse(models.Model):
         return routes
 
     @api.multi
-    def _update_name_and_code(self, name, code):
+    def _update_name_and_code(self, name=False, code=False):
         res = super(StockWarehouse, self)._update_name_and_code(name, code)
         warehouse = self[0]
         #change the buy procurement rule name

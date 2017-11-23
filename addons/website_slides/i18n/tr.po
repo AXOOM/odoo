@@ -7,20 +7,22 @@
 # gezgin biri <gezginbiri@hotmail.com>, 2016
 # Murat Kaplan <muratk@projetgrup.com>, 2016
 # Ayhan KIZILTAN <akiziltan76@hotmail.com>, 2016
-# selim kartal <kartalselim37@gmail.com>, 2016
+# Gökhan Erdoğdu <gokhan.erdogdu@mechsoft.com.tr>, 2016
 # Ediz Duman <neps1192@gmail.com>, 2016
 # Doğan Altunbay <doganaltunbay@gmail.com>, 2016
 # Esin Kandemir <esaykandemir@gmail.com>, 2016
+# selim kartal <kartalselim37@gmail.com>, 2016
 # Azar Huseynli <azerbay1984@gmail.com>, 2016
 # Cem Uygur <cemuygur.beb@gmail.com>, 2016
 # Ramiz Deniz Öner <deniz@denizoner.com>, 2016
+# Emre Akayoğlu <emre.akayoglu@mechsoft.com.tr>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 10.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-10 08:44+0000\n"
-"PO-Revision-Date: 2016-10-10 08:44+0000\n"
-"Last-Translator: Ramiz Deniz Öner <deniz@denizoner.com>, 2016\n"
+"POT-Creation-Date: 2017-06-23 13:28+0000\n"
+"PO-Revision-Date: 2017-06-23 13:28+0000\n"
+"Last-Translator: Emre Akayoğlu <emre.akayoglu@mechsoft.com.tr>, 2016\n"
 "Language-Team: Turkish (https://www.transifex.com/odoo/teams/41243/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -120,11 +122,13 @@ msgid ""
 "<b class=\"oe_slide_js_embed_option_link\" data-slide-option-"
 "id=\"#slide_share\"><i class=\"fa fa-share-alt\"/> Share</b>"
 msgstr ""
+"<b class=\"oe_slide_js_embed_option_link\" data-slide-option-"
+"id=\"#slide_share\"><i class=\"fa fa-share-alt\"/> Paylaş</b>"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.home
 msgid "<b>Share:</b>"
-msgstr ""
+msgstr "<b>Paylaş:</b>"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.slide_detail_view
@@ -168,6 +172,8 @@ msgid ""
 "<i class=\"fa fa-envelope-o\"/>\n"
 "                        Send Email"
 msgstr ""
+"<i class=\"fa fa-envelope-o\"/>\n"
+"                        Eposta Gönder"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.embed_slide
@@ -201,7 +207,7 @@ msgstr ""
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.slide_detail_view
 msgid "<i class=\"fa fa-share-alt\"/> Share"
-msgstr ""
+msgstr "<i class=\"fa fa-share-alt\"/> Paylaş"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.embed_slide
@@ -305,6 +311,11 @@ msgstr ""
 #. module: website_slides
 #: model:slide.slide,name:website_slides.slide_5
 msgid "Awesome Timesheet by Odoo"
+msgstr ""
+
+#. module: website_slides
+#: model:slide.tag,name:website_slides.tag1
+msgid "CMS"
 msgstr ""
 
 #. module: website_slides
@@ -510,7 +521,7 @@ msgstr "Döküman ID"
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide_url
 msgid "Document URL"
-msgstr ""
+msgstr "Doküman URL"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.slides_channel_header
@@ -674,7 +685,7 @@ msgstr "Resim"
 #. module: website_slides
 #: selection:slide.slide,slide_type:0
 msgid "Infographic"
-msgstr ""
+msgstr "İnfografi"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.slides_channel_header
@@ -737,6 +748,11 @@ msgid "Likes"
 msgstr ""
 
 #. module: website_slides
+#: model:slide.tag,name:website_slides.tag2
+msgid "Marketing"
+msgstr "Pazarlama"
+
+#. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide_image_medium
 msgid "Medium"
 msgstr "Orta"
@@ -749,7 +765,7 @@ msgstr ""
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide_mime_type
 msgid "Mime-type"
-msgstr ""
+msgstr "Mime-Türü"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.slide_detail_view
@@ -812,7 +828,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:website_slides.field_slide_category_nbr_documents
 #: model:ir.model.fields,field_description:website_slides.field_slide_channel_nbr_documents
 msgid "Number of Documents"
-msgstr ""
+msgstr "Doküman Sayısı"
 
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_category_nbr_infographics
@@ -839,6 +855,7 @@ msgstr ""
 
 #. module: website_slides
 #: model:slide.category,name:website_slides.category_2
+#: model:slide.tag,name:website_slides.tag5
 msgid "Odoo Days"
 msgstr ""
 
@@ -933,7 +950,7 @@ msgstr ""
 #: code:addons/website_slides/models/slides.py:533
 #, python-format
 msgid "Please enter valid Youtube or Google Doc URL"
-msgstr ""
+msgstr "Lütfen geçerli bir Youtube veya Google Doc URL'si girin"
 
 #. module: website_slides
 #: code:addons/website_slides/controllers/main.py:282
@@ -944,7 +961,7 @@ msgstr ""
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.slide_detail_view
 msgid "Post"
-msgstr "İşe"
+msgstr "Gönder"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.slide_detail_view
@@ -957,7 +974,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:website_slides.field_slide_embed_slide_id
 #: selection:slide.slide,slide_type:0
 msgid "Presentation"
-msgstr ""
+msgstr "Sunum"
 
 #. module: website_slides
 #: model:mail.message.subtype,description:website_slides.mt_channel_slide_published
@@ -1105,7 +1122,7 @@ msgstr ""
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.view_slide_slide_form
 msgid "Slide"
-msgstr ""
+msgstr "Slayt"
 
 #. module: website_slides
 #: model:ir.model,name:website_slides.model_slide_tag
@@ -1208,7 +1225,7 @@ msgstr ""
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide_image_thumb
 msgid "Thumbnail"
-msgstr ""
+msgstr "Küçük Resim"
 
 #. module: website_slides
 #. openerp-web
@@ -1256,12 +1273,12 @@ msgstr ""
 #: code:addons/website_slides/models/slides.py:522
 #, python-format
 msgid "Unknown document"
-msgstr ""
+msgstr "Bilinmeyen doküman"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.slides_grid_view
 msgid "Unpublished"
-msgstr ""
+msgstr "Yayınlanmayan"
 
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_channel_upload_group_ids
@@ -1293,7 +1310,7 @@ msgstr ""
 #. module: website_slides
 #: model:slide.channel,description:website_slides.channel_private
 msgid "Used to publish internal slides of company."
-msgstr ""
+msgstr "Firmanın iç slaytlarını yayınlamak için kullanılır."
 
 #. module: website_slides
 #: model:slide.channel,description:website_slides.channel_partial
@@ -1319,7 +1336,7 @@ msgstr "Görünümler"
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.related_slides
 msgid "Views ."
-msgstr ""
+msgstr "Görünümler"
 
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_channel_visibility
@@ -1392,12 +1409,12 @@ msgstr ""
 #. module: website_slides
 #: model:ir.model.fields,help:website_slides.field_slide_slide_document_id
 msgid "Youtube or Google Document ID"
-msgstr ""
+msgstr "Youtube veya Google Doc ID"
 
 #. module: website_slides
 #: model:ir.model.fields,help:website_slides.field_slide_slide_url
 msgid "Youtube or Google Document URL"
-msgstr ""
+msgstr "Youtube veya Google Doc URL"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.slide_social_email
@@ -1461,7 +1478,7 @@ msgstr ""
 #. module: website_slides
 #: model:ir.model,name:website_slides.model_website_config_settings
 msgid "website.config.settings"
-msgstr ""
+msgstr "website.config.settings"
 
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.slide_social_email

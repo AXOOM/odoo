@@ -211,7 +211,7 @@ msgstr "Ώρες που Απομένουν"
 #. module: hr_timesheet
 #: model:ir.ui.view,arch_db:hr_timesheet.view_task_kanban_inherited_progress
 msgid "Remaining hours"
-msgstr ""
+msgstr "Ώρες που Απομένουν"
 
 #. module: hr_timesheet
 #: model:ir.ui.menu,name:hr_timesheet.menu_timesheets_reports
@@ -286,7 +286,7 @@ msgstr "Φύλλο Xρόνου Eργασίας"
 #: model:ir.ui.view,arch_db:hr_timesheet.hr_timesheet_line_tree
 #: model:ir.ui.view,arch_db:hr_timesheet.view_task_form2_inherited
 msgid "Timesheet Activities"
-msgstr ""
+msgstr "Πρόγραμμα Δράσεων"
 
 #. module: hr_timesheet
 #: model:ir.actions.act_window,name:hr_timesheet.project_task_action_view_timesheet

@@ -8,7 +8,7 @@ from dateutil import relativedelta
 from odoo import api, fields, models, _
 from odoo.addons import decimal_precision as dp
 from odoo.exceptions import UserError, ValidationError
-from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 import logging
 
@@ -552,7 +552,7 @@ class Warehouse(models.Model):
         routes = self.env['stock.location.route'].search([('supplier_wh_id', '=', self.id)])
         pulls = Pull.search(['&', ('route_id', 'in', routes.ids), ('location_id.usage', '=', 'transit')])
         pulls.write({
-            'location_src_id': new_location,
+            'location_src_id': new_location.id,
             'procure_method': change_to_multiple and "make_to_order" or "make_to_stock"})
         if not change_to_multiple:
             # If single delivery we should create the necessary MTO rules for the resupply
@@ -573,7 +573,7 @@ class Warehouse(models.Model):
         routes = self.env['stock.location.route'].search([('supplied_wh_id', 'in', self.ids)])
         self.env['procurement.rule'].search([
             '&', ('route_id', 'in', routes.ids),
-            ('location_src_id.usage', '=', 'transit')]).write({'location_id': new_location})
+            ('location_src_id.usage', '=', 'transit')]).write({'location_id': new_location.id})
 
     @api.multi
     def _update_routes(self):
@@ -614,7 +614,8 @@ class Warehouse(models.Model):
                         pull.write({'name': pull.name.replace(warehouse.name, new_name, 1)})
                     for push in route.push_ids:
                         push.write({'name': push.name.replace(warehouse.name, new_name, 1)})
-                warehouse.mto_pull_id.write({'name': warehouse.mto_pull_id.name.replace(warehouse.name, new_name, 1)})
+                if warehouse.mto_pull_id:
+                    warehouse.mto_pull_id.write({'name': warehouse.mto_pull_id.name.replace(warehouse.name, new_name, 1)})
         for warehouse in self:
             sequence_data = warehouse._get_sequence_values()
             warehouse.in_type_id.sequence_id.write(sequence_data['in_type_id'])
@@ -842,7 +843,7 @@ class Orderpoint(models.Model):
             # These days will be substracted when creating the PO
             days += self.product_id._select_seller().delay or 0.0
         date_planned = start_date + relativedelta.relativedelta(days=days)
-        return date_planned.strftime(DEFAULT_SERVER_DATE_FORMAT)
+        return date_planned.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
 
     @api.multi
     def _prepare_procurement_values(self, product_qty, date=False, group=False):
