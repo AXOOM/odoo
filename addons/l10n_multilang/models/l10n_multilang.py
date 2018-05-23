@@ -32,16 +32,16 @@ class AccountChartTemplate(models.Model):
             for element in in_ids.with_context(lang=None):
                 if value[element.id]:
                     #copy Translation from Source to Destination object
-                    xlat_obj.create({
-                        'name': out_ids._name + ',' + in_field,
-                        'type': 'model',
-                        'res_id': out_ids[counter].id,
-                        'lang': lang,
-                        'src': element.name,
-                        'value': value[element.id],
-                    })
+                    xlat_obj._set_ids(
+                        out_ids._name + ',' + in_field,
+                        'model',
+                        lang,
+                        out_ids[counter].ids,
+                        value[element.id],
+                        element[in_field]
+                    )
                 else:
-                    _logger.info('Language: %s. Translation from template: there is no translation available for %s!' % (lang, element.name))
+                    _logger.info('Language: %s. Translation from template: there is no translation available for %s!' % (lang, element[in_field]))
                 counter += 1
         return True
 
@@ -63,8 +63,10 @@ class AccountChartTemplate(models.Model):
                     for company in company_ids:
                         # write account.account translations in the real COA
                         chart_template_id._process_accounts_translations(company.id, langs, 'name')
-                        # copy account.tax translations
+                        # copy account.tax name translations
                         chart_template_id._process_taxes_translations(company.id, langs, 'name')
+                        # copy account.tax description translations
+                        chart_template_id._process_taxes_translations(company.id, langs, 'description')
                         # copy account.fiscal.position translations
                         chart_template_id._process_fiscal_pos_translations(company.id, langs, 'name')
         return True
@@ -109,8 +111,10 @@ class BaseLanguageInstall(models.TransientModel):
                 for company in self.env['res.company'].search([('chart_template_id', '=', coa.id)]):
                     # write account.account translations in the real COA
                     coa._process_accounts_translations(company.id, [self.lang], 'name')
-                    # copy account.tax translations
+                    # copy account.tax name translations
                     coa._process_taxes_translations(company.id, [self.lang], 'name')
+                    # copy account.tax description translations
+                    coa._process_taxes_translations(company.id, [self.lang], 'description')
                     # copy account.fiscal.position translations
                     coa._process_fiscal_pos_translations(company.id, [self.lang], 'name')
         return res

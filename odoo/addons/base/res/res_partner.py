@@ -201,7 +201,7 @@ class Partner(models.Model, FormatAddress):
     # company_type is only an interface field, do not use it in business logic
     company_type = fields.Selection(string='Company Type',
         selection=[('person', 'Individual'), ('company', 'Company')],
-        compute='_compute_company_type', readonly=False)
+        compute='_compute_company_type', inverse='_write_company_type')
     company_id = fields.Many2one('res.company', 'Company', index=True, default=_default_company)
     color = fields.Integer(string='Color Index', default=0)
     user_ids = fields.One2many('res.users', 'partner_id', string='Users', auto_join=True)
@@ -350,6 +350,13 @@ class Partner(models.Model, FormatAddress):
                 result['value'] = {key: convert(self.parent_id[key]) for key in address_fields}
         return result
 
+    @api.onchange('country_id')
+    def _onchange_country_id(self):
+        if self.country_id:
+            return {'domain': {'state_id': [('country_id', '=', self.country_id.id)]}}
+        else:
+            return {'domain': {'state_id': []}}
+
     @api.onchange('email')
     def onchange_email(self):
         if not self.image and not self._context.get('yaml_onchange') and self.email:
@@ -364,6 +371,10 @@ class Partner(models.Model, FormatAddress):
     def _compute_company_type(self):
         for partner in self:
             partner.company_type = 'company' if partner.is_company else 'person'
+
+    def _write_company_type(self):
+        for partner in self:
+            partner.is_company = partner.company_type == 'company'
 
     @api.onchange('company_type')
     def onchange_company_type(self):
@@ -422,6 +433,7 @@ class Partner(models.Model, FormatAddress):
         sync_children = self.child_ids.filtered(lambda c: not c.is_company)
         for child in sync_children:
             child._commercial_sync_to_children()
+        sync_children._compute_commercial_partner()
         return sync_children.write(sync_vals)
 
     @api.multi
@@ -445,6 +457,10 @@ class Partner(models.Model, FormatAddress):
                 commercial_fields = self._commercial_fields()
                 if any(field in values for field in commercial_fields):
                     self._commercial_sync_to_children()
+            for child in self.child_ids.filtered(lambda c: not c.is_company):
+                if child.commercial_partner_id != self.commercial_partner_id :
+                    self._commercial_sync_to_children()
+                    break
             # 2b. Address fields: sync if address changed
             address_fields = self._address_fields()
             if any(field in values for field in address_fields):
@@ -493,7 +509,7 @@ class Partner(models.Model, FormatAddress):
         result = True
         # To write in SUPERUSER on field is_company and avoid access rights problems.
         if 'is_company' in vals and self.user_has_groups('base.group_partner_manager') and not self.env.uid == SUPERUSER_ID:
-            result = super(Partner, self).sudo().write({'is_company': vals.get('is_company')})
+            result = super(Partner, self.sudo()).write({'is_company': vals.get('is_company')})
             del vals['is_company']
         result = result and super(Partner, self).write(vals)
         for partner in self:
@@ -606,7 +622,7 @@ class Partner(models.Model, FormatAddress):
             raise UserError(_("Couldn't create contact without email address!"))
         if not name and email:
             name = email
-        partner = self.create({self._rec_name: name or email, 'email': email or False})
+        partner = self.create({self._rec_name: name or email, 'email': email or self.env.context.get('default_email', False)})
         return partner.name_get()[0]
 
     @api.model
@@ -684,7 +700,7 @@ class Partner(models.Model, FormatAddress):
 
     def _get_gravatar_image(self, email):
         gravatar_image = False
-        email_hash = hashlib.md5(email.lower()).hexdigest()
+        email_hash = hashlib.md5(email.lower().encode('utf-8')).hexdigest()
         url = "https://www.gravatar.com/avatar/" + email_hash
         try:
             image_content = urllib2.urlopen(url + "?d=404&s=128", timeout=5).read()

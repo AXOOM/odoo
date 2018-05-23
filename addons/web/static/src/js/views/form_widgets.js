@@ -200,7 +200,7 @@ var KanbanSelection = common.AbstractField.extend({
     prepare_dropdown_selection: function() {
         var self = this;
         var _data = [];
-        var current_stage_id = self.view.datarecord.stage_id[0];
+        var current_stage_id = self.view.datarecord.stage_id && self.view.datarecord.stage_id[0];
         var stage_data = {
             id: current_stage_id,
             legend_normal: self.view.datarecord.legend_normal || undefined,
@@ -427,8 +427,8 @@ var FieldCharDomain = common.AbstractField.extend(common.ReinitializeFieldMixin,
                 return;
             }
             var ds = new data.DataSetStatic(self, model, self.build_context());
-            ds.call('search_count', [domain]).then(function (results) {
-                self.$('.o_count').text(results + _t(' selected records'));
+            ds.call('search_count', [domain, ds.get_context()]).then(function (results) {
+                self.$('.o_count').text(results + ' ' + _t(' selected records'));
                 if (self.get('effective_readonly')) {
                     self.$('button').text(_t('See selection '));
                 }
@@ -454,6 +454,7 @@ var FieldCharDomain = common.AbstractField.extend(common.ReinitializeFieldMixin,
         var self = this;
         var dialog = new common.DomainEditorDialog(this, {
             res_model: this.options.model || this.field_manager.get_field_value(this.options.model_field),
+            context: self.build_context(),
             default_domain: this.get('value'),
             title: this.get('effective_readonly') ? _t('Selected records') : _t('Select records...'),
             readonly: this.get('effective_readonly'),
@@ -465,6 +466,8 @@ var FieldCharDomain = common.AbstractField.extend(common.ReinitializeFieldMixin,
                 }
             }
         }).open();
+        this.trigger("dialog_opened", dialog);
+        return dialog;
     },
 });
 
@@ -955,7 +958,8 @@ var FieldRadio = common.AbstractField.extend(common.ReinitializeFieldMixin, {
     },
     get_value: function () {
         var value = this.get('value');
-        return ((value instanceof Array)? value[0] : value) || false;
+        value = ((value instanceof Array)? value[0] : value);
+        return  _.isUndefined(value) ? false : value;
     },
     render_value: function () {
         var self = this;
@@ -1006,6 +1010,7 @@ var FieldReference = common.AbstractField.extend(common.ReinitializeFieldMixin, 
         this.m2o = new FieldMany2One(this.fm, { attrs: {
             name: 'Referenced Document',
             modifiers: JSON.stringify({readonly: this.get('effective_readonly')}),
+            context: this.build_context().eval(),
         }});
         this.m2o.on("change:value", this, this.data_changed);
         this.m2o.appendTo(this.$el);
@@ -1173,7 +1178,7 @@ var FieldBinaryFile = FieldBinary.extend({
         this._super();
         if (this.get("effective_readonly")) {
             this.$el.click(function(ev) {
-                if (self.get('value')) {
+                if (self.get('value') && self.view.datarecord.id) {
                     self.on_save_as(ev);
                 }
                 return false;
@@ -1185,17 +1190,56 @@ var FieldBinaryFile = FieldBinary.extend({
             });
         }
     },
+    /**
+     * Render the value of the binary file field
+     *
+     * The value depends on the mode (readonly/edit) and the attribute filename
+     * in the xml node of the field:
+     *
+     *
+     *              with filename       without filename
+     *           [------------------|-----------------------]
+     * readonly: |  saved filename  |      binary size      |
+     *     edit: | current filename | base64 representation |
+     *           [------------------|-----------------------]
+     *
+     *
+     * This is how the filename is retrieved:
+     *
+     *   - Suppose that the binary field is named 'data'
+     *   - The xml node of this field is as follow:
+     *
+     *        `<field name='data' filename='fdata'/>`
+     *
+     *   - 'fdata' is another field whose value is the filename
+     *   - On the following record:
+     *
+     *          `{data: "Cg==1das02fa01", fdata: 'my-file.txt'}`
+     *
+     *   - The content of the file is the value of 'data': Cg==1das02fa01
+     *   - The filename is the value of 'fdata': my-file.txt
+     */
     render_value: function() {
-        var filename = this.view.datarecord[this.node.attrs.filename];
+        var filename;
         if (this.get("effective_readonly")) {
+            // Filename from saved state (might render from a discard operation)
+            filename = this.view.datarecord[this.node.attrs.filename]; // do not forward-port >= 11.0
             this.do_toggle(!!this.get('value'));
             if (this.get('value')) {
                 this.$el.empty().append($("<span/>").addClass('fa fa-download'));
+                if (this.view.datarecord.id) {
+                    this.$el.css('cursor', 'pointer');
+                } else {
+                    this.$el.css('cursor', 'not-allowed');
+                }
                 if (filename) {
                     this.$el.append(" " + filename);
                 }
             }
         } else {
+            // Filename at the moment (might be unsaved state)
+            var filenameField = this.field_manager.fields[this.node.attrs.filename]; // do not forward-port >= 11.0
+            filename = filenameField ? filenameField.get('value') : '';
             if(this.get('value')) {
                 this.$el.children().removeClass('o_hidden');
                 this.$('.o_select_file_button').first().addClass('o_hidden');
@@ -1363,13 +1407,11 @@ var FieldStatus = common.AbstractField.extend({
                 // For field type selection filter values according to
                 // statusbar_visible attribute of the field. For example:
                 // statusbar_visible="draft,open".
-                var select = this.field.selection;
-                for(var i=0; i < select.length; i++) {
-                    var key = select[i][0];
-                    if(key === this.get('value') || !this.options.visible || this.options.visible.indexOf(key) !== -1) {
-                        selection_unfolded.push(select[i]);
-                    }
-                }
+                var restriction = _.isString(this.options.visible) ? this.options.visible.split(',') : [];
+                selection_unfolded = _.filter(this.field.selection, function (val) {
+                    return val[0] === self.get('value') || !self.options.visible || _.contains(restriction, val[0]);
+                });
+
                 return $.when();
             }
         }, this);

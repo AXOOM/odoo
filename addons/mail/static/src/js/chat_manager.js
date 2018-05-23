@@ -146,7 +146,16 @@ function make_message (data) {
     _.each(_.keys(emoji_substitutions), function (key) {
         var escaped_key = String(key).replace(/([.*+?=^!:${}()|[\]\/\\])/g, '\\$1');
         var regexp = new RegExp("(?:^|\\s|<[a-z]*>)(" + escaped_key + ")(?=\\s|$|</[a-z]*>)", "g");
+        var msg_bak = msg.body;
         msg.body = msg.body.replace(regexp, ' <span class="o_mail_emoji">'+emoji_substitutions[key]+'</span> ');
+
+        // Idiot-proof limit. If the user had the amazing idea of copy-pasting thousands of emojis,
+        // the image rendering can lead to memory overflow errors on some browsers (e.g. Chrome).
+        // Set an arbitrary limit to 200 from which we simply don't replace them (anyway, they are
+        // already replaced by the unicode counterpart).
+        if (_.str.count(msg.body, 'o_mail_emoji') > 200) {
+            msg.body = msg_bak;
+        }
     });
 
     function property_descr(channel) {
@@ -221,13 +230,21 @@ function make_message (data) {
     // can not be done in preprocess, since it alter the original value
     if (msg.tracking_value_ids && msg.tracking_value_ids.length) {
         _.each(msg.tracking_value_ids, function(f) {
-            if (_.contains(['date', 'datetime'], f.field_type)) {
-                var format = (f.field_type === 'date') ? 'LL' : 'LLL';
+            if (f.field_type === 'datetime') {
+                var format = 'LLL';
                 if (f.old_value) {
                     f.old_value = moment.utc(f.old_value).local().format(format);
                 }
                 if (f.new_value) {
                     f.new_value = moment.utc(f.new_value).local().format(format);
+                }
+            } else if (f.field_type === 'date') {
+                var format = 'LL';
+                if (f.old_value) {
+                    f.old_value = moment(f.old_value).local().format(format);
+                }
+                if (f.new_value) {
+                    f.new_value = moment(f.new_value).local().format(format);
                 }
             }
         });
@@ -479,7 +496,9 @@ function on_needaction_notification (message) {
         increment_unread: true,
     });
     invalidate_caches(message.channel_ids);
-    needaction_counter++;
+    if (message.channel_ids.length !== 0) {
+        needaction_counter++;
+    }
     _.each(message.channel_ids, function (channel_id) {
         var channel = chat_manager.get_channel(channel_id);
         if (channel) {
@@ -667,7 +686,7 @@ var chat_manager = {
         // to linkify the urls we end up with double linkification a bit everywhere.
         // Ideally we want to keep the content as text internally and only make html
         // enrichment at display time but the current design makes this quite hard to do.
-        var body = utils.linkify(_.str.trim(data.content));
+        var body = utils.parse_and_transform(_.str.trim(data.content), utils.add_link);
 
         var msg = {
             partner_ids: data.partner_ids,
@@ -1044,7 +1063,9 @@ function init () {
 
     bus.on('notification', null, on_notification);
 
-    return session.rpc('/mail/client_action').then(function (result) {
+    return session.is_bound.then(function(){
+        return session.rpc('/mail/client_action');
+    }).then(function (result) {
         _.each(result.channel_slots, function (channels) {
             _.each(channels, add_channel);
         });

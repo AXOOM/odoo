@@ -10,7 +10,7 @@ class TestMassMailing(models.TransientModel):
 
     email_to = fields.Char(string='Recipients', required=True,
                            help='Comma-separated list of email addresses.', default=lambda self: self.env['mail.message']._get_default_from())
-    mass_mailing_id = fields.Many2one('mail.mass_mailing', string='Mailing', required=True)
+    mass_mailing_id = fields.Many2one('mail.mass_mailing', string='Mailing', required=True, ondelete='cascade')
 
     @api.multi
     def send_mail_test(self):
@@ -26,7 +26,7 @@ class TestMassMailing(models.TransientModel):
                 'reply_to': mailing.reply_to,
                 'email_to': test_mail,
                 'subject': mailing.name,
-                'body_html': mailing.body_html,
+                'body_html': tools.html_sanitize(mailing.body_html, sanitize_attributes=True, sanitize_style=True, strip_classes=True),
                 'notification': True,
                 'mailing_id': mailing.id,
                 'attachment_ids': [(4, attachment.id) for attachment in mailing.attachment_ids],

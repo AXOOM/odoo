@@ -3,12 +3,13 @@
 # * resource
 # 
 # Translators:
-# Martin Trigaux <mat@odoo.com>, 2016
+# Martin Trigaux, 2016
 # Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2016
 # Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2016
 # Kimmo Lehtonen <leban@netzionale.com>, 2016
 # Kari Lindgren <kari.lindgren@emsystems.fi>, 2016
 # Eino Mäkitalo <eino.makitalo@netitbe.fi>, 2016
+# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2016
 # Kari Lindgren <karisatu@gmail.com>, 2016
 msgid ""
 msgstr ""
@@ -33,7 +34,7 @@ msgstr "%s (copy)"
 #. module: resource
 #: model:ir.model.fields,field_description:resource.field_resource_resource_active
 msgid "Active"
-msgstr "Active"
+msgstr "Aktiivinen"
 
 #. module: resource
 #: model:ir.actions.act_window,name:resource.resource_calendar_closing_days
@@ -43,7 +44,7 @@ msgstr "Sulkupäivät"
 #. module: resource
 #: model:ir.model.fields,field_description:resource.field_resource_resource_code
 msgid "Code"
-msgstr "Código"
+msgstr "Koodi"
 
 #. module: resource
 #: model:ir.model.fields,field_description:resource.field_resource_calendar_company_id
@@ -86,6 +87,7 @@ msgid ""
 "Define working hours and time table that could be scheduled to your project "
 "members"
 msgstr ""
+"Määrittele työaika ja aikataulu jonka voit asettaa projektin henkilöille."
 
 #. module: resource
 #: model:ir.model.fields,field_description:resource.field_resource_calendar_attendance_display_name
@@ -343,6 +345,12 @@ msgstr "Loman alkupäivä kuukausittain"
 #: selection:resource.calendar.attendance,dayofweek:0
 msgid "Sunday"
 msgstr "Sunnuntai"
+
+#. module: resource
+#: code:addons/resource/models/resource.py:714
+#, python-format
+msgid "The efficiency factor cannot be equal to 0."
+msgstr "Tehokkuuskerroin ei voi olla 0."
 
 #. module: resource
 #: model:ir.model.fields,help:resource.field_resource_resource_time_efficiency

@@ -27,7 +27,7 @@ class HrTimesheetSheet(models.Model):
             return (datetime.today() + relativedelta(weekday=0, days=-6)).strftime('%Y-%m-%d')
         elif r == 'year':
             return time.strftime('%Y-01-01')
-        return fields.date.context_today(self)
+        return fields.Date.context_today(self)
 
     def _default_date_to(self):
         user = self.env['res.users'].browse(self.env.uid)
@@ -38,7 +38,7 @@ class HrTimesheetSheet(models.Model):
             return (datetime.today() + relativedelta(weekday=6)).strftime('%Y-%m-%d')
         elif r == 'year':
             return time.strftime('%Y-12-31')
-        return fields.date.context_today(self)
+        return fields.Date.context_today(self)
 
     def _default_employee(self):
         emp_ids = self.env['hr.employee'].search([('user_id', '=', self.env.uid)])
@@ -68,9 +68,8 @@ class HrTimesheetSheet(models.Model):
              '\n* The \'Waiting Approval\' status is used to confirm the timesheet by user. '
              '\n* The \'Approved\' status is used when the users timesheet is accepted by his/her senior.')
     account_ids = fields.One2many('hr_timesheet_sheet.sheet.account', 'sheet_id', string='Analytic accounts', readonly=True)
-    company_id = fields.Many2one('res.company', string='Company')
-    department_id = fields.Many2one('hr.department', string='Department',
-        default=lambda self: self.env['res.company']._company_default_get())
+    company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env['res.company']._company_default_get())
+    department_id = fields.Many2one('hr.department', string='Department')
 
     @api.constrains('date_to', 'date_from', 'employee_id')
     def _check_sheet_date(self, forced_user_id=False):
@@ -85,7 +84,7 @@ class HrTimesheetSheet(models.Model):
                         AND id <> %s''',
                     (sheet.date_to, sheet.date_from, new_user_id, sheet.id))
                 if any(self.env.cr.fetchall()):
-                    raise ValidationError('You cannot have 2 timesheets that overlap!\nPlease use the menu \'My Current Timesheet\' to avoid this problem.')
+                    raise ValidationError(_('You cannot have 2 timesheets that overlap!\nPlease use the menu \'My Current Timesheet\' to avoid this problem.'))
 
     @api.onchange('employee_id')
     def onchange_employee_id(self):
@@ -152,7 +151,7 @@ class HrTimesheetSheet(models.Model):
 
         analytic_timesheet_toremove = self.env['account.analytic.line']
         for sheet in self:
-            analytic_timesheet_toremove += sheet.timesheet_ids
+            analytic_timesheet_toremove += sheet.timesheet_ids.filtered(lambda t: not t.task_id)
         analytic_timesheet_toremove.unlink()
 
         return super(HrTimesheetSheet, self).unlink()

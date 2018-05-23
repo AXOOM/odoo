@@ -67,7 +67,8 @@ return Widget.extend({
             values = [];
             if (this.groupbys.length === 1) data_pt.value = [data_pt.value];
             for (j = 0; j < data_pt.value.length; j++) {
-                values[j] = this.sanitize_value(data_pt.value[j], data_pt.grouped_on[j]);
+                var field = _.isArray(data_pt.grouped_on) ? data_pt.grouped_on[j] : data_pt.grouped_on;
+                values[j] = this.sanitize_value(data_pt.value[j], field);
             }
             value = is_count ? data_pt.length : data_pt.aggregates[this.measure];
             this.data.push({
@@ -99,7 +100,7 @@ return Widget.extend({
             }));
         } else {
             var chart = this['display_' + this.mode]();
-            if (chart) {
+            if (chart && chart.tooltip.chartContainer) {
                 chart.tooltip.chartContainer(this.$el[0]);
             }
         }
@@ -107,7 +108,8 @@ return Widget.extend({
     display_bar: function () {
         // prepare data for bar chart
         var data, values,
-            measure = this.fields[this.measure].string;
+            measure = this.fields[this.measure].string,
+            self = this;
 
         // zero groupbys
         if (this.groupbys.length === 0) {
@@ -166,9 +168,8 @@ return Widget.extend({
         svg.transition().duration(0);
 
         var chart = nv.models.multiBarChart();
-        var maxVal = _.max(values, function(v) {return v.y})
         chart.options({
-          margin: {left: 12 * String(maxVal && maxVal.y || 10000000).length},
+          margin: {left: 120, bottom: 60},
           delay: 250,
           transition: 10,
           showLegend: _.size(data) <= MAX_LEGEND_LENGTH,
@@ -177,10 +178,15 @@ return Widget.extend({
           rightAlignYAxis: false,
           stacked: this.stacked,
           reduceXTicks: false,
-          // rotateLabels: 40,
+          rotateLabels: -20,
           showControls: (this.groupbys.length > 1)
         });
-        chart.yAxis.tickFormat(function(d) { return formats.format_value(d, { type : 'float' });});
+        chart.yAxis.tickFormat(function(d) {
+            return formats.format_value(d, {
+                type : 'float',
+                digits : self.fields[self.measure] && self.fields[self.measure].digits || [69, 2],
+            });
+        });
 
         chart(svg);
         this.to_remove = chart.update;
@@ -200,18 +206,20 @@ return Widget.extend({
             all_zero = all_zero && (datapt.value === 0);
         });
         if (some_negative && !all_negative) {
-            return this.$el.append(QWeb.render('GraphView.error', {
+            this.$el.append(QWeb.render('GraphView.error', {
                 title: _t("Invalid data"),
                 description: _t("Pie chart cannot mix positive and negative numbers. " +
                     "Try to change your domain to only display positive results"),
             }));
+            return;
         }
         if (all_zero) {
-            return this.$el.append(QWeb.render('GraphView.error', {
+            this.$el.append(QWeb.render('GraphView.error', {
                 title: _t("Invalid data"),
                 description: _t("Pie chart cannot display all zero numbers.. " +
                     "Try to change your domain to display positive results"),
             }));
+            return;
         }
         if (this.groupbys.length) {
             data = this.data.map(function (datapt) {
@@ -302,9 +310,8 @@ return Widget.extend({
         svg.transition().duration(0);
 
         var chart = nv.models.lineChart();
-        var maxVal = _.max(values, function(v) {return v.y})
         chart.options({
-          margin: {left: 12 * String(maxVal && maxVal.y || 10000000).length, right: 50},
+          margin: {left: 120, bottom: 60},
           useInteractiveGuideline: true,
           showLegend: _.size(data) <= MAX_LEGEND_LENGTH,
           showXAxis: true,
@@ -312,7 +319,12 @@ return Widget.extend({
         });
         chart.xAxis.tickValues(tickValues)
             .tickFormat(tickFormat);
-        chart.yAxis.tickFormat(function(d) { return formats.format_value(d, { type : 'float' });});
+        chart.yAxis.tickFormat(function(d) {
+            return formats.format_value(d, {
+                type : 'float',
+                digits : self.fields[self.measure] && self.fields[self.measure].digits || [69, 2],
+            });
+        });
 
         chart(svg);
         this.to_remove = chart.update;

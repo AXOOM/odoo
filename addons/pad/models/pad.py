@@ -80,7 +80,7 @@ class PadCommon(models.AbstractModel):
         if url:
             try:
                 page = urllib2.urlopen('%s/export/html' % url).read()
-                mo = re.search('<body>(.*)</body>', page)
+                mo = re.search('<body>(.*)</body>', page, re.DOTALL)
                 if mo:
                     content = mo.group(1)
             except:
@@ -116,7 +116,7 @@ class PadCommon(models.AbstractModel):
     # Set the pad content in vals
     def _set_pad_value(self, vals):
         for k, v in vals.items():
-            field = self._fields[k]
+            field = self._fields.get(k)
             if hasattr(field, 'pad_content_field'):
                 vals[field.pad_content_field] = self.pad_get_content(v)
 

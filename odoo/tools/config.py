@@ -255,7 +255,7 @@ class configmanager(object):
                          type="int")
         group.add_option("--unaccent", dest="unaccent", my_default=False, action="store_true",
                          help="Use the unaccent function provided by the database when available.")
-        group.add_option("--geoip-db", dest="geoip_database", my_default='/usr/share/GeoIP/GeoLiteCity.dat',
+        group.add_option("--geoip-db", dest="geoip_database", my_default='/usr/share/GeoIP/GeoLite2-City.mmdb',
                          help="Absolute path to the GeoIP database file.")
         parser.add_option_group(group)
 
@@ -580,12 +580,17 @@ class configmanager(object):
 
     @property
     def addons_data_dir(self):
-        d = os.path.join(self['data_dir'], 'addons', release.series)
+        add_dir = os.path.join(self['data_dir'], 'addons')
+        d = os.path.join(add_dir, release.series)
         if not os.path.exists(d):
-            os.makedirs(d, 0700)
-        else:
-            assert os.access(d, os.W_OK), \
-                "%s: directory is not writable" % d
+            try:
+                # bootstrap parent dir +rwx
+                if not os.path.exists(add_dir):
+                    os.makedirs(add_dir, 0700)
+                # try to make +rx placeholder dir, will need manual +w to activate it
+                os.makedirs(d, 0500)
+            except OSError:
+                logging.getLogger(__name__).debug('Failed to create addons data dir %s', d)
         return d
 
     @property

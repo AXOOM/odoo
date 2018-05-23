@@ -26,6 +26,7 @@ import odoo
 from odoo import api, fields, models, modules, tools, _
 from odoo.exceptions import AccessDenied, UserError
 from odoo.tools.parse_version import parse_version
+from odoo.tools.misc import topological_sort
 
 _logger = logging.getLogger(__name__)
 
@@ -598,7 +599,7 @@ class Module(models.Model):
         res = [0, 0]    # [update, add]
 
         default_version = modules.adapt_version('1.0')
-        known_mods = self.search([])
+        known_mods = self.with_context(lang=None).search([])
         known_mods_names = {mod.name: mod for mod in known_mods}
 
         # iterate through detected modules and update/create them in db
@@ -642,6 +643,15 @@ class Module(models.Model):
     def install_from_urls(self, urls):
         if not self.env.user.has_group('base.group_system'):
             raise AccessDenied()
+
+        # One-click install is opt-in - cfr Issue #15225
+        ad_dir = tools.config.addons_data_dir
+        if not os.access(ad_dir, os.W_OK):
+            msg = (_("Automatic install of downloaded Apps is currently disabled.") + "\n\n" +
+                   _("To enable it, make sure this directory exists and is writable on the server:") +
+                   "\n%s" % ad_dir)
+            _logger.warning(msg)
+            raise UserError(msg)
 
         apps_server = urlparse.urlparse(self.get_apps_server())
 
@@ -754,7 +764,13 @@ class Module(models.Model):
             filter_lang = [lang.code for lang in langs]
         elif not isinstance(filter_lang, (list, tuple)):
             filter_lang = [filter_lang]
-        mod_names = [mod.name for mod in self if mod.state in ('installed', 'to install', 'to upgrade')]
+
+        update_mods = self.filtered(lambda r: r.state in ('installed', 'to install', 'to upgrade'))
+        mod_dict = {
+            mod.name: mod.dependencies_id.mapped('name')
+            for mod in update_mods
+        }
+        mod_names = topological_sort(mod_dict)
         self.env['ir.translation'].load_module_terms(mod_names, filter_lang)
 
     @api.multi

@@ -337,7 +337,7 @@ var SearchView = View.extend({
     },
     set_default_filters: function () {
         var self = this,
-            default_custom_filter = this.$buttons && this.favorite_menu.get_default_filter();
+            default_custom_filter = this.$buttons && this.favorite_menu && this.favorite_menu.get_default_filter();
         if (!self.options.disable_custom_filters && default_custom_filter) {
             return this.favorite_menu.toggle_filter(default_custom_filter, true);
         }
@@ -466,7 +466,7 @@ var SearchView = View.extend({
      */
     select_completion: function (e, ui) {
         e.preventDefault();
-        if(ui.item.facet.values && ui.item.facet.values.length && String(ui.item.facet.values[0].value).trim() !== "") {
+        if(ui.item.facet && ui.item.facet.values && ui.item.facet.values.length && String(ui.item.facet.values[0].value).trim() !== "") {
             this.query.add(ui.item.facet);
         } else {
             this.query.trigger('add');

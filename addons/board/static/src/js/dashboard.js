@@ -10,6 +10,7 @@ var form_common = require('web.form_common');
 var Model = require('web.DataModel');
 var pyeval = require('web.pyeval');
 var ViewManager = require('web.ViewManager');
+var data_manager = require('web.data_manager');
 
 var _t = core._t;
 var QWeb = core.qweb;
@@ -171,15 +172,19 @@ var DashBoard = form_common.FormWidget.extend({
             board.columns.push(actions);
         });
         var arch = QWeb.render('DashBoard.xml', board);
-        this.rpc('/web/view/add_custom', {
-            view_id: this.view.fields_view.view_id,
+        this.rpc('/web/view/edit_custom', { // do not forward-port > saas-15
+            custom_id: this.view.fields_view.custom_view_id, // do not forward-port > saas-15
             arch: arch
+        }).then(function() {
+            data_manager.invalidate();
         });
     },
     on_load_action: function(result, index, action_attrs) {
         var self = this,
             action = result,
             view_mode = action_attrs.view_mode;
+
+        if (!action) { return; }
 
         // evaluate action_attrs context and domain
         action_attrs.context_string = action_attrs.context;
@@ -268,6 +273,14 @@ var DashBoard = form_common.FormWidget.extend({
                         kanban.loaded.done(function() {
                             kanban.controller.open_record = function(event, editable) {
                                 new_form_action(event.data.id, editable);
+                            };
+                        });
+                    }
+                    var calendar = am.inner_widget.views.calendar;
+                    if (calendar) {
+                        calendar.loaded.done(function () {
+                            calendar.controller.open_event = function (id, title) {
+                                new_form_action(Number(id));
                             };
                         });
                     }
@@ -413,7 +426,7 @@ FavoriteMenu.include({
             name = self.$add_dashboard_input.val();
         
         return self.rpc('/board/add_to_dashboard', {
-            action_id: self.action_id,
+            action_id: self.action_id || false,
             context_to_save: c,
             domain: d,
             view_mode: self.view_manager.active_view.type,
@@ -421,6 +434,7 @@ FavoriteMenu.include({
         }).then(function (r) {
             if (r) {
                 self.do_notify(_.str.sprintf(_t("'%s' added to dashboard"), name), '');
+                data_manager.invalidate();
             } else {
                 self.do_warn(_t("Could not add filter to dashboard"));
             }

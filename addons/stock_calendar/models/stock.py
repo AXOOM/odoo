@@ -34,7 +34,6 @@ class StockWarehouseOrderpoint(models.Model):
         """
         # TDE FIXME: unused context key 'no_round_hours' removed
         # Check if orderpoint has last execution date and calculate if we need to calculate again already
-        Calendar = self.env["resource.calendar"]
         Attendance = self.env["resource.calendar.attendance"]
         group = False
         date = False
@@ -46,7 +45,7 @@ class StockWarehouseOrderpoint(models.Model):
             else:
                 new_date = datetime.utcnow()
             # TDE note: I bet accessing interval[2] will crash, no ? this code seems very louche
-            intervals = Calendar._schedule_days(self.purchase_calendar_id.id, 1, new_date, compute_leaves=True)
+            intervals = self.purchase_calendar_id._schedule_days(1, new_date, compute_leaves=True)
             for interval in intervals:
                 # If last execution date, interval should start after it in order not to execute the same orderpoint twice
                 # TODO: Make the interval a little bigger
@@ -55,7 +54,7 @@ class StockWarehouseOrderpoint(models.Model):
                     date = interval[1]
                     res_intervals += [(date, group), ]
         else:
-            return [(now_date, None)]
+            return [(False, None)]
         return res_intervals
 
     def _get_previous_dates(self, start_date=False):

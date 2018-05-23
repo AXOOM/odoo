@@ -637,7 +637,7 @@ class SurveyQuestion(models.Model):
             if self.comments_allowed:
                 comment_answer = answer_candidates.pop(("%s_%s" % (answer_tag, 'comment')), '').strip()
             # Preventing answers with blank value
-            if all([True if not answer.strip() else False for answer in answer_candidates.values()]):
+            if all([True if not answer.strip() else False for answer in answer_candidates.values()]) and answer_candidates:
                 errors.update({answer_tag: self.constr_error_msg})
             # There is no answer neither comments (if comments count as answer)
             if not answer_candidates and self.comment_count_as_answer and (not comment_flag or not comment_answer):
@@ -682,6 +682,7 @@ class SurveyLabel(models.Model):
     value = fields.Char('Suggested value', translate=True, required=True)
     quizz_mark = fields.Float('Score for this choice', help="A positive score indicates a correct choice; a negative or null score indicates a wrong answer")
 
+    @api.one
     @api.constrains('question_id', 'question_id_2')
     def _check_question_not_empty(self):
         """Ensure that field question_id XOR field question_id_2 is not null"""

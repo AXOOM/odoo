@@ -315,7 +315,7 @@ var ListView = View.extend({
 
                 this._limit = new_state.limit;
                 this.current_min = new_state.current_min;
-                this.reload_content().then(function() {
+                this.reload_content_when_ready().then(function() {
                     // Reset the scroll position to the top on page changed only
                     if (!limit_changed) {
                         self.set_scrollTop(0);
@@ -452,6 +452,12 @@ var ListView = View.extend({
         });
         return reloaded.promise();
     }),
+    /**
+     * Proxy allowing override when reload_content can't be called directly
+     */
+    reload_content_when_ready: function() {
+        return this.reload_content.apply(this, arguments);
+    },
     reload: function () {
         return this.reload_content();
     },
@@ -939,9 +945,11 @@ ListView.List = Class.extend({
                     $row = self.$current.children(
                         '[data-id=' + record.get('id') + ']');
                 }
-                var $newRow = $(self.render_record(record));
-                $newRow.find('.o_list_record_selector input').prop('checked', !!$row.find('.o_list_record_selector input').prop('checked'));
-                $row.replaceWith($newRow);
+                if ($row.length) {
+                    var $newRow = $(self.render_record(record));
+                    $newRow.find('.o_list_record_selector input').prop('checked', !!$row.find('.o_list_record_selector input').prop('checked'));
+                    $row.replaceWith($newRow);
+                }
             },
             'add': function (ev, records, record, index) {
                 var $new_row = $(self.render_record(record));
@@ -1073,7 +1081,7 @@ ListView.List = Class.extend({
             value = record.get(column.id);
             // non-resolved (string) m2m values are arrays
             if (value instanceof Array && !_.isEmpty(value)
-                    && !record.get(column.id + '__display')) {
+                    && (!record.get(column.id + '__display') && record.get(column.id + '__display') !== '')) {
                 var ids;
                 // they come in two shapes:
                 if (value[0] instanceof Array) {
@@ -1429,7 +1437,7 @@ ListView.Groups = Class.extend({
                     } else if (column.id in group.aggregates) {
                         var r = {};
                         r[column.id] = {value: group.aggregates[column.id]};
-                        $('<td class="oe_number">')
+                        $('<td class="oe_number o_list_number">')
                             .html(column.format(r, {process_modifiers: false}))
                             .appendTo($row);
                     } else {
@@ -1493,20 +1501,16 @@ ListView.Groups = Class.extend({
         });
     },
     setup_resequence_rows: function (list, dataset) {
+        var sequence_field = _(this.columns).findWhere({'widget': 'handle'});
+        var seqname = sequence_field ? sequence_field.name : 'sequence';
+
         // drag and drop enabled if list is not sorted (unless it is sorted by
-        // sequence (ASC)), and there is a visible column with @widget=handle
-        // or "sequence" column in the view.
-        if ((dataset.sort && dataset.sort() && dataset.sort() !== 'sequence'
-            && dataset.sort() !== 'sequence ASC')
-            || !_(this.columns).any(function (column) {
-                    return column.widget === 'handle'
-                        || column.name === 'sequence'; })) {
+        // its sequence field (ASC)), and there is a visible column with
+        // @widget=handle or "sequence" column in the view.
+        if ((dataset.sort && [seqname, seqname + ' ASC', ''].indexOf(dataset.sort()) === -1)
+            || !_(this.columns).findWhere({'name': seqname})) {
             return;
         }
-        var sequence_field = _(this.columns).find(function (c) {
-            return c.widget === 'handle';
-        });
-        var seqname = sequence_field ? sequence_field.name : 'sequence';
 
         // ondrop, move relevant record & fix sequences
         list.$current.sortable({
